@@ -2,7 +2,7 @@
 
 Análisis exploratorio y modelado predictivo sobre **35.036 listados** de Airbnb en Nueva York (scraping de abril 2026).
 
-## 🌎 **[REPORTE MODELO ARIBNB](https://juanguana21.github.io/Squid-Game-Python/)**
+## 🌎 **[REPORTE MODELO ARIBNB](https://juanguana21.github.io/Proyecto_Airbnb/)**
 
 ## 📊 Resultados
 
