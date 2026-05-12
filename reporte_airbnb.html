@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyecto Airbnb NYC — Predicción de Precios</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --cream: #f5f0e8;
+    --rust: #c84b2f;
+    --gold: #d4a843;
+    --muted: #6b6560;
+    --card-bg: #ffffff;
+    --border: #ddd8ce;
+    --success: #2d7a4f;
+    --code-bg: #1a1a1a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 80px 48px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    border: 60px solid var(--rust);
+    opacity: .18;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    border: 40px solid var(--gold);
+    opacity: .12;
+  }
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(38px, 6vw, 72px);
+    font-weight: 900;
+    line-height: 1.05;
+    max-width: 780px;
+  }
+  .hero h1 span { color: var(--rust); }
+  .hero-sub {
+    margin-top: 20px;
+    color: #aaa49c;
+    font-size: 16px;
+    max-width: 560px;
+  }
+  .hero-meta {
+    margin-top: 40px;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .hero-meta-item { font-size: 13px; color: #888; }
+  .hero-meta-item strong { display: block; font-size: 22px; color: var(--cream); font-family: 'DM Mono', monospace; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+
+  section { padding: 64px 0; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 32px;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--rust) 0%, var(--border) 60%, transparent 100%);
+    margin: 0;
+  }
+
+  /* ── CARDS GRID ── */
+  .cards { display: grid; gap: 20px; }
+  .cards-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .cards-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-accent {
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--rust);
+  }
+  .card-accent.gold { background: var(--gold); }
+  .card-accent.green { background: var(--success); }
+
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  .card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* ── STAT CARDS ── */
+  .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 48px; }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 20px 16px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--ink);
+    display: block;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── MODEL TABLE ── */
+  .model-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .model-table thead tr { background: var(--ink); color: var(--cream); }
+  .model-table thead th {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 400;
+  }
+  .model-table tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  .model-table tbody tr:hover { background: #faf8f4; }
+  .model-table tbody td { padding: 14px 16px; }
+  .model-table tbody td:first-child { font-weight: 500; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    background: #edf7ef;
+    color: var(--success);
+    font-weight: 500;
+  }
+  .badge.warn { background: #fef3e2; color: #b45309; }
+  .badge.best { background: var(--rust); color: white; }
+
+  /* ── PIPELINE STEPS ── */
+  .pipeline { display: flex; flex-direction: column; gap: 0; }
+  .pipeline-step {
+    display: flex;
+    gap: 20px;
+    position: relative;
+    padding-bottom: 32px;
+  }
+  .pipeline-step:last-child { padding-bottom: 0; }
+  .step-num-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .step-num {
+    width: 36px; height: 36px;
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .step-line {
+    flex: 1;
+    width: 1px;
+    background: var(--border);
+    margin-top: 6px;
+  }
+  .step-pipeline-last .step-line { display: none; }
+  .step-content { padding-top: 6px; }
+  .step-content h4 { font-family: 'Playfair Display', serif; font-size: 17px; margin-bottom: 6px; }
+  .step-content p { font-size: 14px; color: var(--muted); }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--code-bg);
+    color: #e0dcd4;
+    padding: 20px 24px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+  .code-block .kw { color: #c084fc; }
+  .code-block .str { color: #86efac; }
+  .code-block .cm { color: #6b7280; }
+  .code-block .fn { color: #60a5fa; }
+  .code-block .num { color: #fb923c; }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight-box {
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 4px;
+    padding: 32px 36px;
+    margin: 32px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .highlight-box .icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; }
+  .highlight-box h3 { font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 8px; }
+  .highlight-box p { font-size: 14px; color: #aaa49c; line-height: 1.65; }
+  .highlight-box strong { color: var(--gold); }
+
+  /* ── INSIGHT LIST ── */
+  .insight-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .insight-list li {
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 14px; color: var(--muted);
+    padding: 14px 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .insight-list li .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--rust); flex-shrink: 0; margin-top: 5px;
+  }
+  .insight-list li .dot.gold { background: var(--gold); }
+  .insight-list li .dot.green { background: var(--success); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--ink);
+    color: #666;
+    text-align: center;
+    padding: 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: .06em;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero h1, .hero-sub, .hero-meta { animation: fadeUp .6s ease both; }
+  .hero-sub { animation-delay: .1s; }
+  .hero-meta { animation-delay: .2s; }
+
+  @media (max-width: 640px) {
+    .hero { padding: 48px 24px 40px; }
+    .container { padding: 0 20px; }
+    section { padding: 48px 0; }
+    .highlight-box { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<header class="hero">
+  <div class="container">
+    <p class="hero-tag">Proyecto 1 · Machine Learning · 2026</p>
+    <h1>Predicción de <span>Precios</span> Airbnb NYC</h1>
+    <p class="hero-sub">Análisis exploratorio, limpieza de datos y modelado predictivo sobre 35.036 alojamientos en Nueva York.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><strong>35.036</strong>registros originales</div>
+      <div class="hero-meta-item"><strong>90</strong>columnas iniciales</div>
+      <div class="hero-meta-item"><strong>4</strong>modelos evaluados</div>
+      <div class="hero-meta-item"><strong>0.68</strong>R² mejor modelo</div>
+    </div>
+  </div>
+</header>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ RESUMEN DATASET ═══════════════ -->
+<section>
+  <div class="container">
+    <p class="section-label">01 — Dataset</p>
+    <h2 class="section-title">Exploración Inicial</h2>
+
+    <div class="stat-cards">
+      <div class="stat-card">
+        <span class="stat-num">35.036</span>
+        <span class="stat-label">Listados totales</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">90</span>
+        <span class="stat-label">Columnas originales</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">20.693</span>
+        <span class="stat-label">Registros con precio</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">$255</span>
+        <span class="stat-label">Precio promedio (noche)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">$55.33</span>
+        <span class="stat-label">Precio más frecuente</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">$440</span>
+        <span class="stat-label">Desv. estándar precio</span>
+      </div>
+    </div>
+
+    <div class="cards cards-2">
+      <div class="card">
+        <div class="card-accent"></div>
+        <h3>Fuente de datos</h3>
+        <p>Dataset de InsideAirbnb scrapeado el <strong>15 de abril de 2026</strong> para la ciudad de Nueva York. Incluye información de listados, hosts, reseñas, disponibilidad y precios de 35.036 propiedades distribuidas en los 5 boroughs.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent gold"></div>
+        <h3>Variable objetivo</h3>
+        <p>Columna <code>price</code> originalmente en formato string con símbolo de dólar (<code>$55.33</code>). Se convirtió a float. El precio va desde <strong>$4.47</strong> hasta más de <strong>$10.000</strong> por noche, con alta asimetría positiva.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PIPELINE LIMPIEZA ═══════════════ -->
+<section style="background: #faf8f4;">
+  <div class="container">
+    <p class="section-label">02 — Preprocesamiento</p>
+    <h2 class="section-title">Pipeline de Limpieza</h2>
+
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="step-num-wrap">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <h4>Eliminación de columnas vacías</h4>
+          <p>Se eliminaron 12 columnas con 100% de valores nulos (<code>neighborhood_overview</code>, <code>host_since</code>, <code>host_response_time</code>, entre otras). El dataset pasó de 90 a 78 columnas.</p>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="step-num-wrap">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <h4>Selección de columnas relevantes</h4>
+          <p>Se seleccionaron 20 columnas con valor predictivo real: características del host (antigüedad, superhost, verificación), tipo de propiedad, ubicación, capacidad, amenities, mínimo de noches, reseñas y precio.</p>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="step-num-wrap">
+          <div class="step-num">3</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <h4>Filtrado por variable objetivo</h4>
+          <p>Se eliminaron filas sin precio para evitar sesgo por imputación. Pérdida del <strong>40.94%</strong> de registros, quedando <strong>20.693 filas</strong> válidas. Decisión correcta: imputar el precio habría distorsionado la distribución objetivo.</p>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="step-num-wrap">
+          <div class="step-num">4</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <h4>Imputación estratégica de nulos</h4>
+          <p>
+            — <code>bathrooms / bedrooms / beds</code>: mediana por <em>property_type</em> y <em>room_type</em><br>
+            — <code>review_scores_rating</code>: 0 para listados sin reseñas (reviews = 0)<br>
+            — <code>host_is_superhost / host_identity_verified</code>: moda (f / t)<br>
+            — <code>host_listings_count, minimum_nights, maximum_nights</code>: mediana global
+          </p>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="step-num-wrap">
+          <div class="step-num">5</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <h4>Ingeniería de features</h4>
+          <p>
+            — <code>has_license</code>: binarización (1 si tiene número de licencia, 0 si nulo)<br>
+            — <code>amenities</code>: conteo de amenities por propiedad (capped a 40)<br>
+            — Capping de <code>maximum_nights</code> a 365 días<br>
+            — Capping de <code>host_listings_count</code> al percentil 95<br>
+            — Reemplazo de 0 en <code>bedrooms</code> por 0.5 (estudios)
+          </p>
+        </div>
+      </div>
+
+      <div class="pipeline-step step-pipeline-last">
+        <div class="step-num-wrap">
+          <div class="step-num">6</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <h4>Filtrado de outliers de precio</h4>
+          <p>Se acotó el precio a ≤ $800/noche para el entrenamiento, resultando en <strong>19.953 registros</strong>. Split 70/30: <strong>13.967 train</strong> · <strong>5.986 test</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ FEATURES ═══════════════ -->
+<section>
+  <div class="container">
+    <p class="section-label">03 — Features</p>
+    <h2 class="section-title">Transformación de Variables</h2>
+
+    <div class="cards cards-3">
+      <div class="card">
+        <div class="card-accent"></div>
+        <h3>StandardScaler</h3>
+        <p>Variables numéricas continuas con distribución normal: <code>hosts_time_as_user_years</code>, <code>hosts_time_as_host_years</code>. Centrado en media 0, desviación 1.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent gold"></div>
+        <h3>OneHot Encoding</h3>
+        <p>Variables nominales de baja cardinalidad: <code>neighbourhood_group_cleansed</code> (borough), <code>room_type</code>. Expansión a variables dummy sin multicolinealidad.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent green"></div>
+        <h3>Target Encoding</h3>
+        <p>Variable de alta cardinalidad: <code>neighbourhood_cleansed</code> (~200 barrios) y <code>property_type</code> (top 7 categorías). Encoding mediante <code>category_encoders</code>.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent"></div>
+        <h3>Funciones Personalizadas</h3>
+        <p>Transformador para <code>amenities</code>: extrae lista JSON y retorna conteo numérico capped. Transformador binario para <code>host_is_superhost</code> e <code>host_identity_verified</code> (t/f → 1/0).</p>
+      </div>
+      <div class="card">
+        <div class="card-accent gold"></div>
+        <h3>Transformación Log (Target)</h3>
+        <p>La variable objetivo (<code>price</code>) se transformó con <code>log1p</code> vía <code>TransformedTargetRegressor</code> para reducir el efecto de outliers y mejorar la distribución.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent green"></div>
+        <h3>ColumnTransformer Pipeline</h3>
+        <p>Todos los transformadores se encadenaron en un <code>Pipeline</code> de scikit-learn para garantizar reproducibilidad y evitar data leakage entre train y test.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ MODELOS ═══════════════ -->
+<section style="background: #faf8f4;">
+  <div class="container">
+    <p class="section-label">04 — Modelado</p>
+    <h2 class="section-title">Comparativa de Modelos</h2>
+
+    <p style="color: var(--muted); font-size: 14px; margin-bottom: 28px; max-width: 680px;">Se entrenaron 4 modelos con validación cruzada (5 folds) y transformación logarítmica del target. Métricas finales evaluadas sobre el conjunto de test (30%).</p>
+
+    <div style="overflow-x: auto; margin-bottom: 40px;">
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th>MAE — Cross Val</th>
+            <th>MAE — Test ($)</th>
+            <th>RMSE — Test ($)</th>
+            <th>R² Score</th>
+            <th>Ranking</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Random Forest</td>
+            <td>$53.93</td>
+            <td>$50.76</td>
+            <td>$82.00</td>
+            <td>0.6826</td>
+            <td><span class="badge best">🏆 Mejor</span></td>
+          </tr>
+          <tr>
+            <td>XGBoost</td>
+            <td>$54.33</td>
+            <td>$51.21</td>
+            <td>$81.67</td>
+            <td>0.6852</td>
+            <td><span class="badge">2°</span></td>
+          </tr>
+          <tr>
+            <td>Red Neuronal (MLP)</td>
+            <td>$60.60</td>
+            <td>$58.95</td>
+            <td>$91.95</td>
+            <td>0.6009</td>
+            <td><span class="badge warn">3°</span></td>
+          </tr>
+          <tr>
+            <td>KNN</td>
+            <td>$61.47</td>
+            <td>$59.24</td>
+            <td>$94.83</td>
+            <td>0.5756</td>
+            <td><span class="badge warn">4°</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="highlight-box">
+      <div class="icon">🌲</div>
+      <div>
+        <h3>Random Forest — Modelo Seleccionado</h3>
+        <p>Con un <strong>MAE de $50.76</strong> y un <strong>R² de 0.68</strong>, Random Forest ofrece el mejor balance entre precisión y generalización. En promedio, el modelo se equivoca en <strong>$50 por predicción</strong> sobre precios que van de $4 a $800. El modelo acierta dentro de un margen del 15% en el <strong>42.11% de los casos</strong>, lo que refleja la alta variabilidad inherente a los precios de Airbnb.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ INSIGHTS ═══════════════ -->
+<section>
+  <div class="container">
+    <p class="section-label">05 — Hallazgos</p>
+    <h2 class="section-title">Insights del Análisis</h2>
+
+    <ul class="insight-list">
+      <li>
+        <div class="dot"></div>
+        <div><strong>Alta concentración de precios bajos:</strong> El precio más frecuente es $55.33, pero la media es $255, indicando una distribución fuertemente asimétrica hacia precios altos. La transformación logarítmica del target fue clave para mejorar el rendimiento de todos los modelos.</div>
+      </li>
+      <li>
+        <div class="dot gold"></div>
+        <div><strong>El tipo de propiedad y borough dominan la predicción:</strong> Los alojamientos en Manhattan tienen precios significativamente más altos. Los "Entire rental unit" (8.288 listings) y "Entire home/apt" representan la mayoría del dataset y tienden a precios más elevados.</div>
+      </li>
+      <li>
+        <div class="dot green"></div>
+        <div><strong>La licencia como señal de calidad:</strong> Solo 4.511 de 20.693 listados tienen licencia activa. La binarización de esta variable captura la diferencia entre operadores formales e informales en la plataforma.</div>
+      </li>
+      <li>
+        <div class="dot"></div>
+        <div><strong>Superhosts verificados: mayoría del mercado:</strong> 13.613 hosts están verificados pero no son superhost, 6.107 son superhost verificados. Solo 275 hosts sin verificar, mostrando que Airbnb ha empujado fuertemente la verificación de identidad.</div>
+      </li>
+      <li>
+        <div class="dot gold"></div>
+        <div><strong>Pérdida aceptable por filtrado:</strong> Aunque se perdió el 40.94% de los datos al eliminar filas sin precio, esta decisión fue correcta. Imputar la variable objetivo habría introducido sesgo circular en el entrenamiento.</div>
+      </li>
+      <li>
+        <div class="dot green"></div>
+        <div><strong>Limitaciones del modelo:</strong> Un R² de 0.68 indica que aún existe un 32% de varianza no explicada. Factores como la calidad de fotos, políticas de cancelación, disponibilidad estacional y demanda en tiempo real no están capturados en los datos estáticos del scraping.</div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ CÓDIGO CLAVE ═══════════════ -->
+<section style="background: #faf8f4;">
+  <div class="container">
+    <p class="section-label">06 — Código</p>
+    <h2 class="section-title">Fragmentos Clave</h2>
+
+    <div class="cards cards-2">
+      <div>
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 12px;">Pipeline de transformación</h3>
+        <div class="code-block">
+<span class="kw">from</span> sklearn.compose <span class="kw">import</span> ColumnTransformer
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">import</span> category_encoders <span class="kw">as</span> ce
+
+preprocessor = ColumnTransformer([
+  (<span class="str">'std'</span>, StandardScaler(), standard_features),
+  (<span class="str">'ohe'</span>, OneHotEncoder(), onehot_features),
+  (<span class="str">'te'</span>, ce.TargetEncoder(), target_enc_features),
+  (<span class="str">'amenities'</span>, AmenitiesCounter(), [<span class="str">'amenities'</span>]),
+  (<span class="str">'binary'</span>, BinaryConverter(), binary_features),
+])
+        </div>
+      </div>
+      <div>
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 12px;">Validación cruzada con log</h3>
+        <div class="code-block">
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> cross_val_score
+<span class="kw">from</span> sklearn.compose <span class="kw">import</span> TransformedTargetRegressor
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">for</span> nombre, modelo <span class="kw">in</span> modelos_log.items():
+  scores = cross_val_score(
+    modelo, X_train, y_train,
+    cv=<span class="num">5</span>, scoring=<span class="str">'neg_mean_absolute_error'</span>
+  )
+  mae = -scores.mean()
+  <span class="fn">print</span>(<span class="str">f"{nombre} MAE: ${mae:.2f}"</span>)
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PRÓXIMOS PASOS ═══════════════ -->
+<section>
+  <div class="container">
+    <p class="section-label">07 — Siguiente iteración</p>
+    <h2 class="section-title">Mejoras Propuestas</h2>
+
+    <div class="cards cards-3">
+      <div class="card">
+        <div class="card-accent"></div>
+        <h3>Optimización de hiperparámetros</h3>
+        <p>Aplicar búsqueda bayesiana (Optuna) sobre Random Forest y XGBoost. Los parámetros clave a explorar son <code>n_estimators</code>, <code>max_depth</code>, <code>min_samples_split</code> y <code>learning_rate</code>.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent gold"></div>
+        <h3>Feature engineering avanzado</h3>
+        <p>Incorporar análisis de texto de <code>description</code> (TF-IDF o embeddings), codificación geoespacial por cuadrantes de latitud/longitud, y features de temporada desde las fechas del scraping.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent green"></div>
+        <h3>Ensemble y stacking</h3>
+        <p>Combinar Random Forest + XGBoost mediante stacking con un meta-modelo lineal. Dado que ambos tienen MAE similar pero RMSE distinto, un ensemble podría reducir el error en casos extremos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer>
+  <p>Proyecto 1 · Predicción de Precios Airbnb NYC · 2026 · Dataset: InsideAirbnb</p>
+</footer>
+
+</body>
+</html>
